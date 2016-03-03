@@ -1,0 +1,7 @@
+[package]
+name = "worldgen"
+version = "0.1.0"
+authors = ["rphmeier <rphmeier@gmail.com>"]
+
+[dependencies]
+backend = { path = "./backend/" }

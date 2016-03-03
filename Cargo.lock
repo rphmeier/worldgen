@@ -1,0 +1,11 @@
+[root]
+name = "worldgen"
+version = "0.1.0"
+dependencies = [
+ "backend 0.1.0",
+]
+
+[[package]]
+name = "backend"
+version = "0.1.0"
+

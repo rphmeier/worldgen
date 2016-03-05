@@ -1,3 +1,7 @@
-#[test]
-fn it_works() {
+pub mod grid;
+
+use grid::Grid;
+
+pub struct World {
+    grid: Grid<f32>,
 }

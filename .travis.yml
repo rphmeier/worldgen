@@ -1,0 +1,5 @@
+language: rust
+
+script:
+  - cargo test -v --manifest-path backend/Cargo.toml
+  - cargo test -v

@@ -2,7 +2,8 @@ use std::ops::{Index, IndexMut};
 
 /// A rectangular grid of objects.
 ///
-/// It can be indexed with an (x, y) pair.
+/// It can be indexed with an (x, y) or [x, y] pair. 
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Grid<T> {
     width: usize,
     height: usize,
@@ -51,9 +52,9 @@ impl<T> Grid<T> {
             return None;
         }
 
-        Some(
-            &self.data[y * self.height + x]
-        )
+        Some(unsafe {
+            self.get_unchecked(x, y)
+        })
     }
 
     /// Perform checked mutable indexing into the grid.
@@ -63,19 +64,19 @@ impl<T> Grid<T> {
             return None;
         }
 
-        Some(
-            &mut self.data[y * self.height + x]
-        )
+        Some(unsafe {
+            self.get_unchecked_mut(x, y)
+        })
     }
 
     /// Perform unchecked indexing into the grid.
     pub unsafe fn get_unchecked(&self, x: usize, y: usize) -> &T {
-        &self.data[y * self.height + x]
+        self.data.get_unchecked(y * self.height + x)
     }
 
     /// Perform unchecked mutable indexing into the grid.
     pub unsafe fn get_unchecked_mut(&mut self, x: usize, y: usize) -> &mut T {
-        &mut self.data[y * self.height + x]
+        self.data.get_unchecked_mut(y * self.height + x)
     }
 }
 
@@ -93,6 +94,13 @@ impl<T> Index<(usize, usize)> for Grid<T> {
     }
 }
 
+impl<T> Index<[usize; 2]> for Grid<T> {
+    type Output = T;
+    fn index(&self, index: [usize; 2]) -> &T {
+        &self[(index[0], index[1])]
+    }
+}
+
 impl<T> IndexMut<(usize, usize)> for Grid<T> {
     fn index_mut(&mut self, index: (usize, usize)) -> &mut T {
         let (x, y) = index;
@@ -103,5 +111,34 @@ impl<T> IndexMut<(usize, usize)> for Grid<T> {
             "Index out of bounds: y is {} but the height is {}", y, self.height);
 
         unsafe { self.get_unchecked_mut(x, y) }
+    }
+}
+
+impl<T> IndexMut<[usize; 2]> for Grid<T> {
+    fn index_mut(&mut self, index: [usize; 2]) -> &mut T {
+        &mut self[(index[0], index[1])]
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn indexing() {
+        let mut grid = Grid::with_value(10, 10, 0);
+        for (i, loc) in (0..10).zip(0..10).enumerate() {
+            grid[loc] = i;
+        }
+        
+        assert!(grid.get(10, 10).is_none());
+        assert!(grid.get_mut(10, 10).is_none());
+    }
+    
+    #[test]
+    #[should_panic]
+    fn indexing_fail() {
+        let mut grid: Grid<f32> = Grid::with_default(5, 5);
+        grid[[10, 10]] = 1f32;
     }
 }

@@ -119,3 +119,26 @@ impl<T> IndexMut<[usize; 2]> for Grid<T> {
         &mut self[(index[0], index[1])]
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn indexing() {
+        let mut grid = Grid::with_value(10, 10, 0);
+        for (i, loc) in (0..10).zip(0..10).enumerate() {
+            grid[loc] = i;
+        }
+        
+        assert!(grid.get(10, 10).is_none());
+        assert!(grid.get_mut(10, 10).is_none());
+    }
+    
+    #[test]
+    #[should_panic]
+    fn indexing_fail() {
+        let mut grid: Grid<f32> = Grid::with_default(5, 5);
+        grid[[10, 10]] = 1f32;
+    }
+}

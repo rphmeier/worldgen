@@ -1,5 +1,5 @@
 //! Geometric primitives
-use std::ops::{Add, Sub};
+use std::ops::{Add, Sub, Div, Neg};
 
 /// A point in the 2-dimensional XY plane.
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
@@ -18,6 +18,11 @@ impl Point2D {
             x: x,
             y: y,
         }
+    }
+    
+    /// The origin point.
+    pub fn origin() -> Self {
+        Point2D::new(0.0, 0.0)
     }
     
     /// Get the x-coordinate of this point.
@@ -60,6 +65,29 @@ impl Sub<Point2D> for Point2D {
     }
 }
 
+impl Div<f32> for Point2D {
+    type Output = Self;
+    
+    #[inline]
+    fn div(self, rhs: f32) -> Self {
+        assert!(rhs != 0.0, "Error: division by 0");
+        
+        Point2D {
+            x: self.x / rhs,
+            y: self.y / rhs,
+        }
+    }
+}
+
+impl Neg for Point2D {
+    type Output = Self;
+    
+    #[inline]
+    fn neg(self) -> Self {
+        Point2D::origin() - self
+    }
+}
+
 /// A triangle is a polygon connecting 3 points.
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub struct Triangle {
@@ -67,6 +95,47 @@ pub struct Triangle {
     b: Point2D,
     c: Point2D,
 }
+
+impl Triangle {
+    /// Create a new triangle with the given points.
+    pub fn new(a: Point2D, b: Point2D, c: Point2D) -> Self {
+        Triangle {
+            a: a,
+            b: b,
+            c: c,
+        }
+    }
+    
+    /// Yields the points of the triangle as a tuple.
+    pub fn points(&self) -> (Point2D, Point2D, Point2D) {
+        (self.a, self.b, self.c)
+    }
+    
+    /// Yields the circumcircle of the triangle.
+    pub fn circumcircle(&self) -> Circle {
+        // to simplify the calculation, we translate the triangle to the origin.
+        // after this, we only need b and c.
+        let b = self.b - self.a;
+        let c = self.c - self.a;
+        
+        // find the circumcenter of the translated triangle.
+        let d = 2.0 * ((b.x * c.y) - (c.x * b.y));
+        let k =   c.y * (b.x.powi(2) + b.y.powi(2))
+                - b.y * (c.x.powi(2) + c.y.powi(2));
+                
+        let x = k / d;
+        let y = (-k) / d;
+        
+        // Translate the center back and find the distance to any of the triangle's 
+        // vertices
+        let center = Point2D::new(x, y) + self.a;
+        let radius = Point2D::distance(center, self.a);
+        
+        Circle::new(center, radius)
+    }
+}
+
+
 
 /// A circle is all points that have a fixed distance, known as the radius, from a center point.
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
